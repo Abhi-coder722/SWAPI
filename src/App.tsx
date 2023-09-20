@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import { ApolloProvider, useQuery } from '@apollo/react-hooks';
-import {ApolloClient, InMemoryCache} from "@apollo/client";
 import {BrowserRouter as Router, Route, Routes, useNavigate} from 'react-router-dom';
 import {DataGrid, GridCellParams, GridColDef} from "@mui/x-data-grid";
 import CharacterDetailPage from "./files/CharacterDetails";
