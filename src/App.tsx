@@ -5,7 +5,7 @@ import {DataGrid, GridCellParams, GridColDef} from "@mui/x-data-grid";
 import CharacterDetailPage from "./files/CharacterDetails";
 import {ICharacter, GET_CHARACTERS, client} from "./files/helper";
 import Header from "./files/Header";
-import {Checkbox, Chip, FormControl, FormControlLabel, FormLabel, Grid, MenuItem, Select } from '@mui/material';
+import {Checkbox, Chip, FormControl, FormControlLabel, FormLabel, Grid, MenuItem, Select, Typography } from '@mui/material';
 export const CharactersTable: React.FC = () => {
 const navigate = useNavigate();
 const { data, loading } = useQuery(GET_CHARACTERS, {
@@ -92,6 +92,13 @@ const rows = filteredCharacters.map((char, i) => ({
   }));
     return (<Grid sx={{paddingLeft:'35px',paddingRight:'35px', marginTop:'15px'}} gap={10}>
         <div>
+        <Typography gutterBottom>
+        🌟✨ 𝓦𝓮𝓵𝓬𝓸𝓶𝓮 𝓽𝓸 𝓶𝔂 𝓢𝓽𝓪𝓻 𝓦𝓪𝓻𝓼 𝓐𝓹𝓹! ✨🌟
+        <br />
+        Here, you can embark on an epic journey through the Star Wars universe. 🚀🌌 Explore an array of iconic characters, choose your favorites, and even employ nifty filters to sort them by gender, species, or eye color.
+        <br />
+        For a deeper dive into the captivating world of these characters, just tap on their name, and you're ready for an intergalactic adventure! 🌠🪐💫. To see the detailed information about particular characters, just click on their name, and you are good to go.
+      </Typography>
 <Grid container direction="row" justifyContent="space-between" alignItems="center">
     <Grid item>
         <Grid container alignItems="center" spacing={2}>
