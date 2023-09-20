@@ -4,14 +4,17 @@ import {ApolloClient, InMemoryCache} from "@apollo/client";
 import {BrowserRouter as Router, Route, Routes, useNavigate} from 'react-router-dom';
 import {DataGrid, GridCellParams, GridColDef} from "@mui/x-data-grid";
 import CharacterDetailPage from "./files/CharacterDetails";
-import {ICharacter, GET_CHARACTERS} from "./files/helper";
+import {ICharacter, GET_CHARACTERS, client} from "./files/helper";
+import Header from "./files/Header";
+import {Checkbox, Chip, FormControl, FormControlLabel, FormLabel, Grid, MenuItem, Select } from '@mui/material';
 export const CharactersTable: React.FC = () => {
 const navigate = useNavigate();
 const { data, loading } = useQuery(GET_CHARACTERS, {
     variables: { first: 1000, after: null }, // Fetch first 100 characters instead of 10
 });
-const [favoritesOnly, setFavoritesOnly] = useState<boolean>(false);
     const [characters, setCharacters] = useState<ICharacter[]>([]);
+
+const [favoritesOnly, setFavoritesOnly] = useState<boolean>(false);
   const [genderFilter, setGenderFilter] = useState("");
   const [eyeColorFilter, setEyeColorFilter] = useState<string[]>([]);
   const [speciesFilter, setSpeciesFilter] = useState<string[]>([]);
@@ -24,21 +27,21 @@ const filteredCharacters = characters.filter((char) => {
     return genderMatch && eyeColorMatch && speciesMatch && favoritesMatch;
 },[characters, genderFilter, eyeColorFilter, speciesFilter]);
     useEffect(() => {
-        if (!loading && data) {
-const charactersData = data.allPeople.edges.map(({ node }: any) => ({
-    name: node.name || "-",
-    height: node.height || "-",
-    mass: node.mass || "-",
-    homeworld: node.homeworld && node.homeworld.name && node.homeworld.name !== 'unknown' ? node.homeworld.name : "-",
-
-    species: node.species ? { name: node.species.name } : null,
-    gender: node.gender && node.gender !== 'unknown' && node.gender !== 'n/a' ? node.gender : "-",
-    eye_color: node.eyeColor || "-",
-    favorite: !!localStorage.getItem(node.name),
-}));
-          setCharacters(charactersData);
-        }
-    }, [data, loading]);
+    if (!loading && data) {
+        const charactersData = data.allPeople.edges.map(({ node }: any, index:any) => ({
+            id: index + 1, // Assign initial ID
+            name: node.name || "-",
+            height: node.height || "-",
+            mass: node.mass || "-",
+            homeworld: node.homeworld && node.homeworld.name && node.homeworld.name !== 'unknown' ? node.homeworld.name : "-",
+            species: node.species ? { name: node.species.name } : null,
+            gender: node.gender && node.gender !== 'unknown' && node.gender !== 'n/a' ? node.gender : "-",
+            eye_color: node.eyeColor || "-",
+            favorite: !!localStorage.getItem(node.name),
+        }));
+        setCharacters(charactersData);
+    }
+}, [data, loading]);
 
     if (loading) return <p>Loading...</p>;
 const toggleFavorite = (characterName: string) => {
@@ -56,15 +59,8 @@ const toggleFavorite = (characterName: string) => {
 
     setCharacters(updatedCharacters);
   };
-const handleCheckboxFilter = (e: React.ChangeEvent<HTMLInputElement>, setFilterState: React.Dispatch<React.SetStateAction<string[]>>) => {
-  if(e.target.checked) {
-    setFilterState(prevState => [...prevState, e.target.value]);
-  } else {
-    setFilterState(prevState => prevState.filter(item => item !== e.target.value));
-  }
-};
   const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', width: 100 },
+    { field: 'id', headerName: 'Character ID', width: 100 },
     { field: 'name', headerName: 'Name', width: 130 },
     { field: 'height', headerName: 'Height', type: 'number', width: 110 },
     { field: 'homeworld', headerName: 'Home Planet', width: 150 },
@@ -85,7 +81,7 @@ const handleCheckboxFilter = (e: React.ChangeEvent<HTMLInputElement>, setFilterS
   },
   ];
 const rows = filteredCharacters.map((char, i) => ({
-    id: i + 1,
+     id: char.id,
     name: char.name,
     height: char.height,
     mass: char.mass,
@@ -95,40 +91,103 @@ const rows = filteredCharacters.map((char, i) => ({
     eye_color: char.eye_color,
     favorite: char.favorite,
   }));
-    return (
-        <div><div><div>
-    <label>
-        <input type="checkbox" checked={favoritesOnly} onChange={e => setFavoritesOnly(e.target.checked)} />
-        Favorites only
-    </label>
-</div>
+    return (<Grid sx={{paddingLeft:'35px',paddingRight:'35px', marginTop:'15px'}} gap={10}>
+        <div>
+<Grid container direction="row" justifyContent="space-between" alignItems="center">
+    <Grid item>
+        <Grid container alignItems="center" spacing={2}>
+            <Grid item>
+                <FormLabel>Filter by Gender:    </FormLabel>
+            </Grid>
+            <Grid item>
+                <FormControl variant="standard">
+                    <Select
+                        value={genderFilter}
+                        onChange={e => { setGenderFilter(e.target.value) }}
+                        displayEmpty
+                    >
+                        <MenuItem value="">
+                            <em>All</em>
+                        </MenuItem>
+                        <MenuItem value="male">Male</MenuItem>
+                        <MenuItem value="female">Female</MenuItem>
+                    </Select>
+                </FormControl>
+            </Grid>
+        </Grid>
+    </Grid>
 
-          <label>Filter by Gender: </label>
-          <select value={genderFilter} onChange={e => { setGenderFilter(e.currentTarget.value) }}>
-              <option value="">All</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-          </select>
-      </div>
-      <div>
-          <label>Filter by Eye Color: </label>
-          <input type="checkbox" value="blue" checked={eyeColorFilter.includes("blue")} onChange={e => { handleCheckboxFilter(e, setEyeColorFilter) }} /> Blue
-          <input type="checkbox" value="brown" checked={eyeColorFilter.includes("brown")} onChange={e => handleCheckboxFilter(e, setEyeColorFilter)}/> Brown
-          <input type="checkbox" value="yellow" checked={eyeColorFilter.includes("yellow")} onChange={e => handleCheckboxFilter(e, setEyeColorFilter)}/> Yellow
-          <input type="checkbox" value="red" checked={eyeColorFilter.includes("red")} onChange={e => handleCheckboxFilter(e, setEyeColorFilter)}/> Red
-          <input type="checkbox" value="orange" checked={eyeColorFilter.includes("orange")} onChange={e => handleCheckboxFilter(e, setEyeColorFilter)}/> Orange
-          <input type="checkbox" value="black" checked={eyeColorFilter.includes("black")} onChange={e => handleCheckboxFilter(e, setEyeColorFilter)}/> Black
-      </div>
-      <div>
-          <label>Filter by Species: </label>
-          <input type="checkbox" value="Human" checked={speciesFilter.includes("Human")} onChange={e => handleCheckboxFilter(e, setSpeciesFilter)} /> Human
-          <input type="checkbox" value="Mirialan" checked={speciesFilter.includes("Mirialan")} onChange={e => handleCheckboxFilter(e, setSpeciesFilter)} /> Mirialan
-          <input type="checkbox" value="Droid" checked={speciesFilter.includes("Droid")} onChange={e => handleCheckboxFilter(e, setSpeciesFilter)} /> Droid
-          <input type="checkbox" value="Gungan" checked={speciesFilter.includes("Gungan")} onChange={e => handleCheckboxFilter(e, setSpeciesFilter)} /> Gungan
-          <input type="checkbox" value="Kaminoan" checked={speciesFilter.includes("Kaminoan")} onChange={e => handleCheckboxFilter(e, setSpeciesFilter)} /> Kaminoan
-          <input type="checkbox" value="Twi'lek" checked={speciesFilter.includes("Twi'lek")} onChange={e => handleCheckboxFilter(e, setSpeciesFilter)} /> Twi'lek
-          <input type="checkbox" value="Zabrak" checked={speciesFilter.includes("Zabrak")} onChange={e => handleCheckboxFilter(e, setSpeciesFilter)} /> Zabrak
-      </div>
+    <Grid item>
+        <FormControlLabel
+            control={
+                <Checkbox
+                    checked={favoritesOnly}
+                    onChange={e => setFavoritesOnly(e.target.checked)}
+                    color="primary"
+                />
+            }
+            label="Favorites only"
+        />
+    </Grid>
+</Grid>
+
+            <Grid container alignItems="center" spacing={2}>
+    <Grid item>
+        <FormLabel>Filter by Eye Color: </FormLabel>
+    </Grid>
+    <Grid item>
+        <FormControl variant="standard">
+            <Select
+                multiple
+                value={eyeColorFilter}
+                onChange={e => { setEyeColorFilter(e.target.value as string[]) }}
+                renderValue={(selected) => (
+                    <div>
+                        {(selected as string[]).map((value) => (
+                            <Chip key={value} label={value} />
+                        ))}
+                    </div>
+                )}
+            >
+                <MenuItem value="blue">Blue</MenuItem>
+                <MenuItem value="brown">Brown</MenuItem>
+                <MenuItem value="yellow">Yellow</MenuItem>
+                <MenuItem value="red">Red</MenuItem>
+                <MenuItem value="orange">Orange</MenuItem>
+                <MenuItem value="black">Black</MenuItem>
+            </Select>
+        </FormControl>
+    </Grid>
+</Grid>
+      <Grid container alignItems="center" spacing={2}>
+    <Grid item>
+        <FormLabel>Filter by Species: </FormLabel>
+    </Grid>
+    <Grid item>
+        <FormControl variant="standard">
+            <Select
+                multiple
+                value={speciesFilter}
+                onChange={e => { setSpeciesFilter(e.target.value as string[]) }}
+                renderValue={(selected) => (
+                    <div>
+                        {(selected as string[]).map((value) => (
+                            <Chip key={value} label={value} />
+                        ))}
+                    </div>
+                )}
+            >
+                <MenuItem value="Human">Human</MenuItem>
+                <MenuItem value="Mirialan">Mirialan</MenuItem>
+                <MenuItem value="Droid">Droid</MenuItem>
+                <MenuItem value="Gungan">Gungan</MenuItem>
+                <MenuItem value="Kaminoan">Kaminoan</MenuItem>
+                <MenuItem value="Twi'lek">Twi'lek</MenuItem>
+                <MenuItem value="Zabrak">Zabrak</MenuItem>
+            </Select>
+        </FormControl>
+    </Grid>
+</Grid>
 
 
 
@@ -146,19 +205,17 @@ const rows = filteredCharacters.map((char, i) => ({
       paginationModel: { page: 0, pageSize: 10 },
     },
   }}
-  pageSizeOptions={[5, 10]}
+  pageSizeOptions={[5, 10,100]}
 />
 
 
     </div>
 </div>
+  </Grid>
     );
 };
 
-const client = new ApolloClient({
-  uri: 'https://swapi-graphql.netlify.app/.netlify/functions/index',
-  cache: new InMemoryCache()
-});
+
 
 function App() {
   return (
@@ -167,10 +224,10 @@ function App() {
         <Routes>
           <Route path="/character/:id" element={<CharacterDetailPage />} />
           <Route path="/" element={
-            <div>
-              <h2>Star Wars Characters 🚀</h2>
+              <>
+              <Header/>
               <CharactersTable />
-            </div>
+              </>
           } />
         </Routes>
       </Router>

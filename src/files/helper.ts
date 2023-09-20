@@ -1,8 +1,7 @@
-import { useQuery } from '@apollo/react-hooks';
-import { useState } from 'react';
-import { gql } from '@apollo/client';
+import {ApolloClient, gql, InMemoryCache} from '@apollo/client';
 
 export interface ICharacter {
+  id:string,
   name: string;
   height: string;
   mass: string;
@@ -34,20 +33,18 @@ export const GET_CHARACTERS = gql`
     }
   }
 `;
+export const boxStyles={
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      backgroundColor: '#f5f5f5',
+      padding: '50px'
+    };
+export const paperStyles={ padding: '80px', textAlign: 'left', maxWidth: '80%', minWidth: '300px', position: 'relative' };
 
-export const useCharacters = () => {
-  const { data, loading } = useQuery(GET_CHARACTERS, {
-    variables: { first: 1000, after: null },
-  });
-
-  return { data, loading };
-};
-
-export const useFilters = () => {
-  const [favoritesOnly, setFavoritesOnly] = useState<boolean>(false);
-  const [genderFilter, setGenderFilter] = useState("");
-  const [eyeColorFilter, setEyeColorFilter] = useState<string[]>([]);
-  const [speciesFilter, setSpeciesFilter] = useState<string[]>([]);
-
-  return { favoritesOnly, setFavoritesOnly, genderFilter, setGenderFilter, eyeColorFilter, setEyeColorFilter, speciesFilter, setSpeciesFilter };
-};
+export const client = new ApolloClient({
+  uri: 'https://swapi-graphql.netlify.app/.netlify/functions/index',
+  cache: new InMemoryCache()
+});
